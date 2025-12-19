@@ -1,0 +1,11 @@
+# config.py
+
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+OWNER_ID = 123456789
+DB_NAME = "chatgame.db"
+
+START_EMOJI = "🎮🤖"
+GAME_TIME_START = 20
+GAME_TIME_MIN = 5
+
+AI_MODE = True
