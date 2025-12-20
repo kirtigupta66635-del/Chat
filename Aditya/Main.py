@@ -8,7 +8,7 @@ from telegram.ext import (
 )
 
 # 🔥 ROOT imports (important)
-from config import BOT_TOKEN, START_EMOJI
+from config import BOT_TOKEN, START_STICKER
 from Aditya.game import start_game, check_answer
 from Aditya.database import global_top_users, top_groups
 from Aditya.chat_ai import remember, reply
