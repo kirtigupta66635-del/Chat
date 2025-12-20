@@ -8,7 +8,7 @@ from telegram.ext import (
     filters
 )
 
-from config import BOT_TOKEN, STICKERS
+from config import BOT_TOKEN, START_EMOJI
 from game import start_game, check_answer
 from database import global_top_users, top_groups
 from chat_ai import remember, reply
@@ -16,18 +16,13 @@ from chat_ai import remember, reply
 
 # ===================== START COMMAND =====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        # send random sticker
-        await update.message.reply_sticker(random.choice(STICKERS))
-    except Exception:
-        pass
-
     await update.message.reply_text(
+        f"{START_EMOJI}\n\n"
         "🎮 *Welcome to Word Guess Game!*\n\n"
         "🧩 /play  → Start Game\n"
         "🏆 /top   → Top Players\n"
         "📊 /grouptop → Top Groups\n\n"
-        "💬 Just send any message to chat with me 😄",
+        "💬 Just send a message to chat with me 😄",
         parse_mode="Markdown"
     )
 
