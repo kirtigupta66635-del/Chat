@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))  # Aditya folder को path में add करें
 import random
 from telegram import Update
 from telegram.ext import (
