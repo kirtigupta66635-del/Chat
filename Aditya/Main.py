@@ -65,6 +65,7 @@ async def grouptop(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ===================== MESSAGE HANDLER =====================
+
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     chat_id = update.effective_chat.id
@@ -77,8 +78,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # normal chat
-    response = await reply(user_id, text)
-await update.message.reply_text(response)
+    response = await reply(user_id, text)  # await का इस्तेमाल async function के अंदर
+    await update.message.reply_text(response)  # यह भी अब function के अंदर है
 
 
 # ===================== BOT START =====================
