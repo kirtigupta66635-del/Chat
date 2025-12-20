@@ -1,7 +1,7 @@
 import time
-from utils import masked_word
-from database import add_user_score, add_group_score, increase_game_count
-from hints import generate_hint
+from Aditya.utils import masked_word
+from Aditya.database import add_user_score, add_group_score, increase_game_count
+from Aditya.hints import generate_hint
 
 ACTIVE_GAME = {}
 MAX_TIME = 60
