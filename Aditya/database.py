@@ -1,36 +1,37 @@
 from pymongo import MongoClient
-from config import MONGO_URL
+from config import MONGO_URI, DB_NAME, USER_COLLECTION, GROUP_COLLECTION
 
-# Mongo client connect
-client = MongoClient(MONGO_URL)
+client = MongoClient(MONGO_URI)
+db = client[DB_NAME]
 
-# Database & Collection
-db = client["telegram_game"]
-scores_col = db["scores"]
+users = db[USER_COLLECTION]
+groups = db[GROUP_COLLECTION]
 
-def add_score(user_id: int, chat_id: int, points: int = 10):
-    """
-    Add or update user score in MongoDB
-    """
-    scores_col.update_one(
-        {
-            "chat_id": chat_id,
-            "user_id": user_id
-        },
-        {
-            "$inc": {"score": points}
-        },
+# ------------- User Score ----------------
+def add_user_score(user_id, points):
+    users.update_one(
+        {"user_id": user_id},
+        {"$inc": {"total_score": points}},
         upsert=True
     )
 
+def global_top_users(limit=10):
+    return list(users.find({}, {"_id":0}).sort("total_score",-1).limit(limit))
 
-def top_scores(chat_id: int, limit: int = 5):
-    """
-    Get top users of a chat from MongoDB
-    """
-    cursor = scores_col.find(
+# ------------- Group Score ----------------
+def add_group_score(chat_id, points):
+    groups.update_one(
         {"chat_id": chat_id},
-        {"_id": 0, "user_id": 1, "score": 1}
-    ).sort("score", -1).limit(limit)
+        {"$inc": {"total_score": points}},
+        upsert=True
+    )
 
-    return [(doc["user_id"], doc["score"]) for doc in cursor]
+def increase_game_count(chat_id):
+    groups.update_one(
+        {"chat_id": chat_id},
+        {"$inc": {"games_played": 1}},
+        upsert=True
+    )
+
+def top_groups(limit=10):
+    return list(groups.find({}, {"_id":0}).sort("total_score",-1).limit(limit))
