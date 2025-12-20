@@ -1,11 +1,15 @@
-# config.py
 
-BOT_TOKEN = "7789010028:AAEA5dC6R99-nHRR1KPlXCl74KvlTjTx6zo"
-OWNER_ID = 7995588921
-MONGO_URL = "mongodb+srv://h17589479_db_user:W5l1NuSQ2cak8I04@cluster0.tkxlnpf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+import os
 
-START_EMOJI = "🎮🤖"
-GAME_TIME_START = 20
-GAME_TIME_MIN = 5
+BOT_TOKEN = os.getenv("BOT_TOKEN", "7789010028:AAEA5dC6R99-nHRR1KPlXCl74KvlTjTx6zo")
 
-AI_MODE = True
+# MongoDB Atlas URI
+MONGO_URI = os.getenv(
+    "MONGO_URI",
+    "mongodb+srv://h17589479_db_user:W5l1NuSQ2cak8I04@cluster0.tkxlnpf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+)
+
+DB_NAME = "telegram_game"
+SCORE_COLLECTION = "scores"
+
+START_EMOJI = "🎮"
