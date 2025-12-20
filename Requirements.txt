@@ -4,3 +4,4 @@ requests
 pymongo
 dnspython
 wordfreq
+pip install openai==0.28
