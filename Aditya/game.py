@@ -1,63 +1,122 @@
-import time
-from Aditya.utils import masked_word
-from Aditya.database import add_user_score, add_group_score, increase_game_count
-from Aditya.hints import generate_hint
+import random
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-ACTIVE_GAME = {}
-MAX_TIME = 60
-MIN_TIME = 5
-BASE_POINTS = 5
+# ================= WORD BANK (LEVEL WISE) =================
 
-def calculate_time(level):
-    time_limit = MAX_TIME
-    for l in range(1, level+1):
-        time_limit -= 5 if l <=3 else 3
-    return max(time_limit, MIN_TIME)
+WORD_LEVELS = {
+    1: ["CAT", "DOG", "SUN", "BAT", "BALL", "CAR", "BUS", "HAT"],
+    2: ["APPLE", "BANANA", "MONKEY", "TIGER", "ELEPHANT", "PENCIL"],
+    3: ["COMPUTER", "KEYBOARD", "INTERNET", "PYTHON", "TELEGRAM"],
+    4: ["ASTRONOMY", "MICROSCOPE", "PHILOSOPHY", "PSYCHOLOGY"],
+    5: ["METAMORPHOSIS", "ELECTROMAGNETISM", "HIPPOPOTOMONSTROSES"]
+}
 
-def start_game(chat_id):
-    prev = ACTIVE_GAME.get(chat_id)
-    level = prev.get("level",0)+1 if prev else 1
+# ================= GAME STATE =================
 
-    masked, answer = masked_word(level)
-    time_limit = calculate_time(level)
+CURRENT_WORD = {}        # chat_id -> word
+USED_WORDS = {}          # chat_id -> set(words)
+USER_SCORE = {}          # user_id -> score
 
-    ACTIVE_GAME[chat_id] = {
-        "answer": answer,
-        "start": time.time(),
-        "level": level,
-        "time": time_limit,
-        "hint_shown": False
-    }
+# ================= FUN TEXT =================
 
-    return (
-        f"🧩 *Level {level}*\n"
-        f"Guess the word:\n`{masked}`\n\n"
-        f"⏱ Time: {time_limit}s"
+FUN_CORRECT = [
+    "🔥 BOOM!",
+    "😎 OP PLAYER!",
+    "🎯 PERFECT!",
+    "🧠 BRAIN ON!",
+    "💥 LEGEND MOVE!"
+]
+
+FUN_SKIP = [
+    "😂 Skip bhi talent hai!",
+    "🙈 Chalo next!",
+    "😜 Easy wala do!",
+]
+
+# ================= HELPERS =================
+
+def get_level(score: int) -> int:
+    if score < 5:
+        return 1
+    elif score < 10:
+        return 2
+    elif score < 20:
+        return 3
+    elif score < 35:
+        return 4
+    else:
+        return 5
+
+
+def get_new_word(chat_id: int, level: int):
+    USED_WORDS.setdefault(chat_id, set())
+    pool = list(set(WORD_LEVELS[level]) - USED_WORDS[chat_id])
+
+    if not pool:  # level words finished
+        USED_WORDS[chat_id].clear()
+        pool = WORD_LEVELS[level][:]
+
+    word = random.choice(pool)
+    USED_WORDS[chat_id].add(word)
+    CURRENT_WORD[chat_id] = word
+    return word
+
+
+def keyboard():
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton("⏭ SKIP", callback_data="skip_word")]]
     )
 
-def check_answer(text, user_id, chat_id):
-    game = ACTIVE_GAME.get(chat_id)
-    if not game:
+# ================= START GAME =================
+
+def start_game(chat_id: int):
+    word = get_new_word(chat_id, 1)
+    return (
+        f"🎮 WORD GAME STARTED\n\n"
+        f"👉 **{word}**\n\n"
+        f"✍️ Just type the word!",
+        keyboard()
+    )
+
+# ================= CHECK ANSWER =================
+
+def check_answer(text: str, user_id: int, chat_id: int):
+    if chat_id not in CURRENT_WORD:
         return None
 
-    elapsed = time.time() - game["start"]
+    # 🔥 CASE INSENSITIVE MATCH
+    if text.strip().upper() != CURRENT_WORD[chat_id]:
+        return None
 
-    # AI hint after half time
-    if not game["hint_shown"] and elapsed > game["time"]/2:
-        hint = generate_hint(game["answer"], revealed=max(1, len(game["answer"])//3))
-        game["hint_shown"] = True
-        return f"💡 Hint: `{hint}`"
+    USER_SCORE[user_id] = USER_SCORE.get(user_id, 0) + 1
+    score = USER_SCORE[user_id]
+    level = get_level(score)
 
-    if elapsed > game["time"]:
-        del ACTIVE_GAME[chat_id]
-        return "⏰ Time up!"
+    new_word = get_new_word(chat_id, level)
 
-    if text.upper().strip() == game["answer"]:
-        points = BASE_POINTS + game["level"]
-        add_user_score(user_id, points)
-        add_group_score(chat_id, points)
-        increase_game_count(chat_id)
-        del ACTIVE_GAME[chat_id]
-        return f"✅ Correct! +{points} points"
+    return (
+        f"{random.choice(FUN_CORRECT)}\n\n"
+        f"🏆 +1 POINT\n"
+        f"⭐ SCORE: <b>{score}</b>\n"
+        f"🧩 LEVEL: <b>{level}</b>\n\n"
+        f"👉 NEXT WORD:\n"
+        f"<b>{new_word}</b>",
+        keyboard()
+    )
 
-    return False
+# ================= SKIP =================
+
+def skip_word(chat_id: int):
+    score = 0
+    for s in USER_SCORE.values():
+        score = max(score, s)
+
+    level = get_level(score)
+    word = get_new_word(chat_id, level)
+
+    return (
+        f"{random.choice(FUN_SKIP)}\n\n"
+        f"👉 NEW WORD:\n"
+        f"<b>{word}</b>",
+        keyboard()
+    )
