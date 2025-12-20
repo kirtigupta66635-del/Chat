@@ -19,30 +19,4 @@ async def reply(user_id: int, user_message: str) -> str:
     except Exception as e:
         return f"Sorry, I couldn't process your message. Error: {e}"
 
-async def reply(user_id: int, user_message: str) -> str:
-    """
-    OpenAI GPT से यूज़र का जवाब लेने वाला फंक्शन
-    """
-    try:
-        # याद रखें मैसेज
-        remember(user_id, user_message)
 
-        # OpenAI से response generate करना
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # या gpt-4
-            messages=[
-                {"role": "system", "content": "You are a helpful, friendly, and funny chatbot."},
-                {"role": "user", "content": user_message}
-            ],
-            max_tokens=150,
-            temperature=0.8
-        )
-
-        answer = response['choices'][0]['message']['content'].strip()
-        # याद रखें AI का जवाब भी
-        remember(user_id, answer)
-
-        return answer
-
-    except Exception as e:
-        return f"Sorry, I couldn't process your message. Error: {e}"
