@@ -77,8 +77,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # normal chat
-    remember(user_id, text)
-    await update.message.reply_text(reply(user_id, text))
+    response = await reply(user_id, text)
+await update.message.reply_text(response)
 
 
 # ===================== BOT START =====================
