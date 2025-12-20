@@ -67,20 +67,21 @@ async def grouptop(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ===================== MESSAGE HANDLER =====================
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+    if not update.message or not update.message.text:
+        return
+
+    text = update.message.text.strip()
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
 
-    # check game answer
+    # ✅ GAME ANSWER CHECK
     res = check_answer(text, user_id, chat_id)
     if isinstance(res, str):
         await update.message.reply_text(res, parse_mode="Markdown")
         return
 
-    # normal chat
-    response = await reply(user_id, text)  # await का इस्तेमाल async function के अंदर
-    await update.message.reply_text(response)  # यह भी अब function के अंदर है
-
+    # ❌ CHAT DISABLED (game testing mode)
+    return
 
 # ===================== BOT START =====================
 app = ApplicationBuilder().token(BOT_TOKEN).build()
