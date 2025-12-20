@@ -57,9 +57,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     remember(user.id, update.message.text)
-    await update.message.reply_text(
-        reply(user.id, update.message.text) + "\n" + mood(update.message.text)
-    )
+    await context.bot.send_message(
+    chat_id=update.effective_chat.id,
+    text=text
+)
 
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
