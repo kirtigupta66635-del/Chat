@@ -1,5 +1,7 @@
-import random
-from wordfreq import zipf_frequency
+from Aditya.utils import masked_word
+from Aditya.game import start_game, check_answer
+from Aditya.database import global_top_users, top_groups
+from Aditya.chat_ai import remember, reply
 
 USED_WORDS = set()
 
