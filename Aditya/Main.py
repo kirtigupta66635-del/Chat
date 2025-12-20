@@ -9,10 +9,10 @@ from telegram.ext import (
 )
 
 from config import BOT_TOKEN, START_EMOJI
+from Aditya.utils import masked_word
 from Aditya.game import start_game, check_answer
 from Aditya.database import global_top_users, top_groups
-from chat_ai import remember, reply
-
+from Aditya.chat_ai import remember, reply
 
 # ===================== START COMMAND =====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
