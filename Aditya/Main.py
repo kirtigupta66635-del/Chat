@@ -1,73 +1,56 @@
-import sys
-import os
-
-# root directory add
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters
-)
-
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from config import BOT_TOKEN, START_EMOJI
 from game import start_game, check_answer
-from Model import mood   # ✅ FIXED (case-sensitive)
-
-# ---------------- TEMP SAFE FUNCTIONS ----------------
-# जब तक database.py और chat_ai.py नहीं बनते
-
-def top_scores(chat_id):
-    return []
-
-def remember(user_id, text):
-    pass
-
-def reply(user_id, text):
-    return "🙂 I heard you."
-# -----------------------------------------------------
-
+from database import global_top_users, top_groups
+from chat_ai import remember, reply
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        f"{START_EMOJI} Welcome!\n/play to start game"
-    )
+    await update.message.reply_text(f"{START_EMOJI} Welcome!\n/play to start game")
 
-async def play(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = start_game(update.effective_chat.id)
-    await update.message.reply_text(text)
+async def play(update: Update, context):
+    await update.message.reply_text(start_game(update.effective_chat.id))
 
-async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    scores = top_scores(update.effective_chat.id)
-    msg = "🏆 Top 5 Players:\n"
-    for uid, score in scores:
-        msg += f"{uid} → {score}\n"
+async def leaderboard(update: Update, context):
+    scores = global_top_users()
+    if not scores:
+        await update.message.reply_text("No scores yet!")
+        return
+    msg = "🏆 Top 10 Players:\n\n"
+    for i,d in enumerate(scores,1):
+        msg += f"{i}. {d['user_id']} → {d['total_score']}\n"
     await update.message.reply_text(msg)
 
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    chat = update.effective_chat
+async def grouptop(update: Update, context):
+    groups = top_groups()
+    if not groups:
+        await update.message.reply_text("No group data!")
+        return
+    msg = "🏆 Top 10 Groups:\n\n"
+    for i,d in enumerate(groups,1):
+        msg += f"{i}. {d['chat_id']} → {d['total_score']}\n"
+    await update.message.reply_text(msg)
 
-    res = check_answer(update.message.text, user.id, chat.id)
-    if res:
-        await update.message.reply_text("✅ Correct! +10 points")
+async def message_handler(update: Update, context):
+    text = update.message.text
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+
+    # Check answer
+    res = check_answer(text, user_id, chat_id)
+    if isinstance(res, str):
+        await update.message.reply_text(res)
         return
 
-    remember(user.id, update.message.text)
-    await context.bot.send_message(
-    chat_id=update.effective_chat.id,
-    text=text
-)
-
+    # If not answer, treat as chat
+    remember(user_id, text)
+    await update.message.reply_text(reply(user_id, text))
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
-
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("play", play))
 app.add_handler(CommandHandler("top", leaderboard))
+app.add_handler(CommandHandler("grouptop", grouptop))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
 app.run_polling()
